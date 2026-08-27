@@ -11,7 +11,7 @@ use RuntimeException;
  *
  * One GET primitive, authenticated with HTTP Basic Auth (application password).
  */
-final class WordPressClient
+class WordPressClient
 {
     private const API_PREFIX = '/wp-json';
     private const TIMEOUT_SECONDS = 30;
