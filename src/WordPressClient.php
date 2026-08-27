@@ -23,7 +23,7 @@ final class WordPressClient
     }
 
     /**
-     * Perform an authenticated GET against a REST route.
+     * Authenticated GET returning the decoded JSON body.
      *
      * @param string               $path  REST route, e.g. "/wp/v2/posts".
      * @param array<string, mixed> $query Query parameters to append.
@@ -31,14 +31,31 @@ final class WordPressClient
      */
     public function get(string $path, array $query = []): array
     {
+        return $this->getWithHeaders($path, $query)['body'];
+    }
+
+    /**
+     * Authenticated GET returning the decoded body plus response headers.
+     *
+     * Used for paginated routes that report the page count in headers
+     * (e.g. X-WP-TotalPages).
+     *
+     * @param array<string, mixed> $query
+     * @return array{body: array<mixed>, headers: array<string, string>}
+     */
+    public function getWithHeaders(string $path, array $query = []): array
+    {
         $url = $this->buildUrl($path, $query);
 
-        [$body, $status] = $this->execute($url);
+        [$rawHeaders, $body, $status] = $this->execute($url);
 
         $this->logger->info(sprintf('GET %s -> %d', $path, $status));
         $this->guardStatus($status, $path, $body);
 
-        return $this->decode($body, $path);
+        return [
+            'body'    => $this->decode($body, $path),
+            'headers' => $this->parseHeaders($rawHeaders),
+        ];
     }
 
     /**
@@ -56,24 +73,28 @@ final class WordPressClient
     }
 
     /**
-     * Run the request, returning [body, httpStatus].
+     * Run the request, returning [rawHeaders, body, httpStatus].
      *
-     * @return array{0: string, 1: int}
+     * @return array{0: string, 1: string, 2: int}
      */
     private function execute(string $url): array
     {
         $ch = curl_init($url);
         curl_setopt_array($ch, $this->curlOptions());
 
-        $body = curl_exec($ch);
+        $response = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $error = curl_error($ch);
 
-        if ($body === false) {
+        if ($response === false) {
             $this->fail('cURL error requesting ' . $url . ': ' . $error);
         }
 
-        return [$body, $status];
+        $rawHeaders = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+
+        return [$rawHeaders, $body, $status];
     }
 
     /**
@@ -83,6 +104,8 @@ final class WordPressClient
     {
         $options = [
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER         => true,
+            CURLOPT_HTTPGET        => true,
             CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
             CURLOPT_USERPWD        => $this->credentials(),
             CURLOPT_HTTPHEADER     => ['Accept: application/json'],
@@ -122,6 +145,25 @@ final class WordPressClient
         }
 
         return $decoded;
+    }
+
+    /**
+     * Parse raw response headers into a lower-cased name => value map.
+     *
+     * @return array<string, string>
+     */
+    private function parseHeaders(string $rawHeaders): array
+    {
+        $headers = [];
+        foreach (explode("\r\n", $rawHeaders) as $line) {
+            if (!str_contains($line, ':')) {
+                continue;
+            }
+            [$name, $value] = explode(':', $line, 2);
+            $headers[strtolower(trim($name))] = trim($value);
+        }
+
+        return $headers;
     }
 
     private function snippet(string $body, int $length = 200): string
