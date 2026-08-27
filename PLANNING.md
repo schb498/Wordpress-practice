@@ -1,6 +1,6 @@
 # Project Planning
 
-> **Goal:** Grab content from a WordPress site (posts/pages, including authenticated/draft content from the editor's account) via the WordPress REST API, run analysis on that content, and produce a structured report as output.
+> **Goal:** Grab content from a WordPress site (posts/pages, including authenticated/draft content from the editor's account) via the WordPress REST API, run analysis on that content, and produce a structured report as output follow 5 audit rules.
 
 ---
 
@@ -16,11 +16,13 @@
 ## NICE TO HAVE
 
 - Caching
+- Comprehensive full test coverage
 
 ## ASSUMPTIONS
 
 - No database is needed
-- All required data can be retrieved via Wordpress REST API
+- All required data can be retrieved via Wordpress REST API and is accurate and up to date
+- Concurrency is handled properly — content edited in the WordPress editor while the API fetch is running is handled correctly (no partial/inconsistent reads)
 
 # Architecture
 
