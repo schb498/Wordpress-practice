@@ -7,6 +7,9 @@ cacert.pem
 # Composer
 /vendor/
 
+# PHPUnit
+/.phpunit.cache/
+
 # Generated reports (keep the folder, ignore its output)
 /output/*
 !/output/.gitkeep

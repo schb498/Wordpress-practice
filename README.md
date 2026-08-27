@@ -53,7 +53,20 @@ The report is written to the `output/` directory.
 
 ## Tests
 
+PHPUnit is a dev dependency, so `composer install` (above) already pulls it in — no extra install step. Run the suite with either:
+
 ```
-composer require --dev phpunit/phpunit   # first time only
-./vendor/bin/phpunit tests
+composer test
 ```
+
+or directly:
+
+```
+./vendor/bin/phpunit
+```
+
+The tests are pure unit tests: they hit no network and need no `.env`. The
+cURL layer is stubbed, so `WordPressClientTest` asserts on the request the
+client builds (Basic Auth, URL, query, headers) and how it handles the
+response, while `AnalyserTest` covers each of the five audit rules (R1–R5)
+and the per-rule aggregation.
