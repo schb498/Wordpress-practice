@@ -23,7 +23,7 @@ Each fetched item is checked against five rules; the report lists how many items
 
 ## Setup
 
-1. Install dependencies:
+1. Make sure [Composer](https://getcomposer.org/download/) is installed, then generate the autoloader:
 
    ```
    composer install
