@@ -70,3 +70,23 @@ cURL layer is stubbed, so `WordPressClientTest` asserts on the request the
 client builds (Basic Auth, URL, query, headers) and how it handles the
 response, while `AnalyserTest` covers each of the five audit rules (R1–R5)
 and the per-rule aggregation.
+
+## Assumptions
+
+- Everything the rules need is available from the REST API; no database access.
+- The account's application password grants read access to drafts and private
+  content
+- Content is stable during a run — a page edited mid-fetch is out of scope.
+- "Stale" for R5 means **more than** 30 days since last modification (exactly 30
+  is not stale).
+
+## Known limitations
+
+- No caching: every run re-fetches all posts and pages, held in memory (fine for
+  a small site, not tuned for very large ones).
+- A draft with a missing or unparseable `modified` date is treated as stale.
+- The report names which rules an item failed but not the offending value (e.g.
+  its word count for R2, or how many days stale for R5), and links no item back
+  to WordPress for editing.
+- Each run overwrites `output/report.{json,html}`; there is no history or
+  run-to-run comparison.
