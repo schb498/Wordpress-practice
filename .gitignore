@@ -4,6 +4,13 @@
 # Downloaded CA bundle (Windows PHP)
 cacert.pem
 
+# Composer
+/vendor/
+
+# Generated reports (keep the folder, ignore its output)
+/output/*
+!/output/.gitkeep
+
 # OS / editor cruft
 Thumbs.db
 .DS_Store
