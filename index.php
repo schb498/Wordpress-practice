@@ -16,6 +16,26 @@ use App\Logger;
 use App\ReportBuilder;
 use App\WordPressClient;
 
-require __DIR__ . '/vendor/autoload.php';
+$autoload = __DIR__ . '/vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "Dependencies not installed - run `composer install` first." . PHP_EOL);
+    exit(1);
+}
+require $autoload;
 
-// TODO: Run the pipeline.
+$logger = new Logger();
+
+try {
+    $config   = Config::fromEnv(__DIR__ . '/.env');
+    $client   = new WordPressClient($config, $logger);
+    $fetcher  = new DataFetcher($client, $logger);
+
+    $items    = array_merge($fetcher->fetchPosts(), $fetcher->fetchPages());
+    $analysis = (new Analyser($logger))->analyse($items);
+    (new ReportBuilder())->build($analysis, __DIR__ . '/output');
+
+    $logger->info('Done. Reports written to output/.');
+} catch (\Throwable $e) {
+    $logger->error($e->getMessage());
+    exit(1);
+}
