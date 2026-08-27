@@ -1,0 +1,10 @@
+# Secrets / local config
+.env
+
+# Downloaded CA bundle (Windows PHP)
+cacert.pem
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+.vscode/
